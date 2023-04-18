@@ -30,7 +30,7 @@ def parse_args():
         help="seed of the experiment")
     parser.add_argument("--cuda", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
         help="if toggled, cuda will be enabled by default")
-    parser.add_argument("--wandb-project", type=str, default="iql-discrete-action-recurrent",
+    parser.add_argument("--wandb-project", type=str, default="iql-discrete-obs-discrete-action-recurrent",
         help="wandb project name")
     parser.add_argument("--wandb-group", type=str, default=None,
         help="wandb group name to use for run")
@@ -40,10 +40,12 @@ def parse_args():
         help="whether to capture videos of the agent performances (check out `videos` folder)")
 
     # Algorithm specific arguments
-    parser.add_argument("--env-id", type=str, default="CartPole-P-v0",
+    parser.add_argument("--env-id", type=str, default="POMDP-heavenhell_1-episodic-v0",
         help="the id of the environment")
-    parser.add_argument("--total-timesteps", type=int, default=100500,
+    parser.add_argument("--total-timesteps", type=int, default=200500,
         help="total timesteps of the experiments")
+    parser.add_argument("--maximum-episode-length", type=int, default=50,
+        help="maximum length for episodes for gym POMDP environment")
     parser.add_argument("--buffer-size", type=int, default=int(1e5),
         help="the replay memory buffer size")
     parser.add_argument("--gamma", type=float, default=0.99,
@@ -72,7 +74,7 @@ def parse_args():
         help="Inverse temperature value used for policy extraction with advantage weighted regression")
 
     # Offline training specific arguments
-    parser.add_argument("--dataset-path", type=str, default="/home/chulabhaya/phd/research/data/mdp_expert/4-8-23_cartpole_p_v0_sac_expert_policy_60_percent_random_data.pkl",
+    parser.add_argument("--dataset-path", type=str, default="/home/chulabhaya/phd/research/data/heavenhell_1/3-23-23_heavenhell_1_sac_expert_policy_expert_data.pkl",
         help="path to dataset for training")
     parser.add_argument("--num-evals", type=int, default=10,
         help="number of evaluation episodes to generate per evaluation during training")
@@ -101,6 +103,7 @@ def parse_args():
 def eval_policy(
     actor,
     env_name,
+    maximum_episode_length,
     seed,
     seed_offset,
     global_step,
@@ -120,6 +123,7 @@ def eval_policy(
             seed + seed_offset,
             capture_video,
             run_name_full,
+            max_episode_len=maximum_episode_length,
         )
         # Track averages
         avg_episodic_return = 0
@@ -213,7 +217,13 @@ if __name__ == "__main__":
             )
 
     # Env setup
-    env = make_env(args.env_id, args.seed, args.capture_video, run_name)
+    env = make_env(
+        args.env_id,
+        args.seed,
+        args.capture_video,
+        run_name,
+        max_episode_len=args.maximum_episode_length,
+    )
     assert isinstance(
         env.action_space, gym.spaces.Discrete
     ), "only discrete action space is supported"
@@ -443,6 +453,7 @@ if __name__ == "__main__":
             eval_policy(
                 actor,
                 args.env_id,
+                args.maximum_episode_length,
                 args.seed,
                 10000,
                 global_step,

@@ -30,7 +30,7 @@ def parse_args():
         help="seed of the experiment")
     parser.add_argument("--cuda", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
         help="if toggled, cuda will be enabled by default")
-    parser.add_argument("--wandb-project", type=str, default="iql-discrete-action",
+    parser.add_argument("--wandb-project", type=str, default="iql-discrete-obs-discrete-action",
         help="wandb project name")
     parser.add_argument("--wandb-group", type=str, default=None,
         help="wandb group name to use for run")
@@ -44,6 +44,8 @@ def parse_args():
         help="the id of the environment")
     parser.add_argument("--total-timesteps", type=int, default=100500,
         help="total timesteps of the experiments")
+    parser.add_argument("--maximum-episode-length", type=int, default=50,
+        help="maximum length for episodes for gym POMDP environment")
     parser.add_argument("--buffer-size", type=int, default=int(1e5),
         help="the replay memory buffer size")
     parser.add_argument("--gamma", type=float, default=0.99,
@@ -99,6 +101,7 @@ def parse_args():
 def eval_policy(
     actor,
     env_name,
+    maximum_episode_length,
     seed,
     seed_offset,
     global_step,
@@ -118,6 +121,7 @@ def eval_policy(
             seed + seed_offset,
             capture_video,
             run_name_full,
+            max_episode_len=maximum_episode_length,
         )
         # Track averages
         avg_episodic_return = 0
@@ -207,7 +211,13 @@ if __name__ == "__main__":
             )
 
     # Env setup
-    env = make_env(args.env_id, args.seed, args.capture_video, run_name)
+    env = make_env(
+        args.env_id,
+        args.seed,
+        args.capture_video,
+        run_name,
+        max_episode_len=args.maximum_episode_length,
+    )
     assert isinstance(
         env.action_space, gym.spaces.Discrete
     ), "only discrete action space is supported"
@@ -407,6 +417,7 @@ if __name__ == "__main__":
             eval_policy(
                 actor,
                 args.env_id,
+                args.maximum_episode_length,
                 args.seed,
                 10000,
                 global_step,
