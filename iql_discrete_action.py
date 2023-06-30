@@ -106,12 +106,9 @@ def eval_policy(
 
     with torch.no_grad():
         # Initialization
-        run_name_full = run_name + "__eval__" + str(global_step)
         env = make_env(
             env_name,
             seed + seed_offset,
-            capture_video,
-            run_name_full,
         )
         # Track averages
         avg_episodic_return = 0
@@ -406,8 +403,6 @@ if __name__ == "__main__":
                 args.seed,
                 10000,
                 global_step,
-                args.capture_video,
-                run_name,
                 args.num_evals,
                 data_log,
             )
