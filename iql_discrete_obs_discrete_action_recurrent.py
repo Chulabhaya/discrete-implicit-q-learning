@@ -38,11 +38,11 @@ def parse_args():
         help="the wandb directory")
 
     # Algorithm specific arguments
-    parser.add_argument("--env-id", type=str, default="POMDP-heavenhell_1-episodic-v0",
+    parser.add_argument("--env-id", type=str, default="POMDP-heavenhell_2-episodic-v0",
         help="the id of the environment")
     parser.add_argument("--total-timesteps", type=int, default=200500,
         help="total timesteps of the experiments")
-    parser.add_argument("--maximum-episode-length", type=int, default=50,
+    parser.add_argument("--maximum-episode-length", type=int, default=100,
         help="maximum length for episodes for gym POMDP environment")
     parser.add_argument("--buffer-size", type=int, default=int(1e5),
         help="the replay memory buffer size")
@@ -52,8 +52,6 @@ def parse_args():
         help="target smoothing coefficient (default: 0.005)")
     parser.add_argument("--batch-size", type=int, default=256,
         help="the batch size of sample from the reply memory")
-    parser.add_argument("--history-length", type=int, default=8,
-        help="maximum sequence length to sample, None means whole episodes are sampled")
     parser.add_argument("--policy-lr", type=float, default=3e-4,
         help="the learning rate of the policy network optimizer")
     parser.add_argument("--q-lr", type=float, default=3e-4,
@@ -72,7 +70,7 @@ def parse_args():
         help="Inverse temperature value used for policy extraction with advantage weighted regression")
 
     # Offline training specific arguments
-    parser.add_argument("--dataset-path", type=str, default="/home/chulabhaya/phd/research/data/heavenhell_1/3-23-23_heavenhell_1_sac_expert_policy_expert_data.pkl",
+    parser.add_argument("--dataset-path", type=str, default="/home/chulabhaya/phd/research/datasets/heavenhell_2/pomdp/6-29-23_hh2_sac_seed_103_time_1683219637_ntw41lb1_global_step_1000000_100_percent_random_data_size_100000_pomdp.pkl",
         help="path to dataset for training")
     parser.add_argument("--num-evals", type=int, default=10,
         help="number of evaluation episodes to generate per evaluation during training")
@@ -105,8 +103,6 @@ def eval_policy(
     seed,
     seed_offset,
     global_step,
-    capture_video,
-    run_name,
     num_evals,
     data_log,
 ):
@@ -303,7 +299,7 @@ if __name__ == "__main__":
             rewards,
             terminateds,
             seq_lengths,
-        ) = rb.sample(args.batch_size, args.history_length)
+        ) = rb.sample(args.batch_size)
 
         # ---------- update value ---------- #
         # no grad because target networks are updated separately
