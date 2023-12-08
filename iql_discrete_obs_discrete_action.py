@@ -260,11 +260,6 @@ if __name__ == "__main__":
     )
     rb.load_buffer(dataset)
 
-    # If resuming training, then load previous replay buffer
-    if args.resume:
-        rb_data = checkpoint["replay_buffer"]
-        rb.load_buffer(rb_data)
-
     # Start time tracking for run
     start_time = time.time()
 
@@ -438,8 +433,6 @@ if __name__ == "__main__":
                     "actor_optimizer": actor_optimizer.state_dict(),
                     "v_optimizer": v_optimizer.state_dict(),
                 }
-                # Save replay buffer
-                rb_data = rb.save_buffer()
                 # Save random states, important for reproducibility
                 rng_states = {
                     "random_rng_state": random.getstate(),
@@ -461,7 +454,6 @@ if __name__ == "__main__":
                     global_step,
                     models,
                     optimizers,
-                    rb_data,
                     rng_states,
                 )
 

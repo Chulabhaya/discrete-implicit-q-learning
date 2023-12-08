@@ -17,7 +17,7 @@ from common.models import (
     RecurrentDiscreteCriticGridVerseObs,
     RecurrentDiscreteValueGridVerseObs,
 )
-from common.replay_buffer import GridVerseReplayBuffer as ReplayBuffer
+from common.replay_buffer import GridVerseOfflineReplayBuffer as ReplayBuffer
 from common.utils import make_gridverse_env, set_seed, save
 
 
@@ -261,23 +261,11 @@ if __name__ == "__main__":
         )
         v_optimizer.load_state_dict(checkpoint["optimizer_state_dict"]["v_optimizer"])
 
-    # Load dataset
-    dataset = pickle.load(open(args.dataset_path, "rb"))
-
     # Initialize replay buffer
-    env.observation_space.dtype = np.float32
     rb = ReplayBuffer(
-        size=args.buffer_size,
-        episodic=True,
-        stateful=False,
+        dataset_path=args.dataset_path,
         device=device,
     )
-    rb.load_buffer(dataset)
-
-    # If resuming training, then load previous replay buffer
-    if args.resume:
-        rb_data = checkpoint["replay_buffer"]
-        rb.load_buffer(rb_data)
 
     # Start time tracking for run
     start_time = time.time()
@@ -484,8 +472,6 @@ if __name__ == "__main__":
                     "actor_optimizer": actor_optimizer.state_dict(),
                     "v_optimizer": v_optimizer.state_dict(),
                 }
-                # Save replay buffer
-                rb_data = rb.save_buffer()
                 # Save random states, important for reproducibility
                 rng_states = {
                     "random_rng_state": random.getstate(),
@@ -507,7 +493,6 @@ if __name__ == "__main__":
                     global_step,
                     models,
                     optimizers,
-                    rb_data,
                     rng_states,
                 )
 
